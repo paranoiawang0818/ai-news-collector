@@ -242,9 +242,12 @@ def send_email(subject, html_content):
     发送HTML邮件
     """
     try:
+        from email.utils import formataddr
+        
         message = MIMEMultipart('alternative')
-        message['From'] = Header(f"AI资讯助手 <{SENDER_EMAIL}>", 'utf-8')
-        message['To'] = Header(RECEIVER_EMAIL, 'utf-8')
+        # 修复From字段格式，符合RFC5322标准
+        message['From'] = formataddr(('AI资讯助手', SENDER_EMAIL))
+        message['To'] = RECEIVER_EMAIL
         message['Subject'] = Header(subject, 'utf-8')
         
         html_part = MIMEText(html_content, 'html', 'utf-8')
