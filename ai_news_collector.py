@@ -102,77 +102,136 @@ def fetch_rss_news(feed_url, source_name, hours=24):
 
 def analyze_importance(news_item):
     """
-    分析资讯重要性（简单规则，可扩展为AI模型）
+    分析资讯重要性（优化评分算法，筛选最有价值的内容）
     """
     title = news_item['title'].lower()
     summary = news_item['summary'].lower()
     text = title + ' ' + summary
     
-    # 高优先级关键词
-    high_priority_keywords = [
-        'gpt-5', 'gpt5', 'claude', 'gemini', 'breakthrough', '突破',
-        'openai', 'google', 'microsoft', 'meta', 'anthropic',
-        '发布', 'release', 'launch', '开源', 'open source',
-        '融资', 'funding', 'billion', '亿', '监管', 'regulation'
-    ]
-    
-    # 中优先级关键词
-    medium_priority_keywords = [
-        'model', 'llm', 'transformer', 'agent', '模型',
-        'research', '研究', 'paper', '论文', 'dataset'
-    ]
-    
     score = 0
+    
+    # 超高优先级关键词（+10分）- 重大发布和突破
+    ultra_high_keywords = [
+        'gpt-5', 'gpt5', 'claude 4', 'gemini ultra', 'breakthrough', '重大突破',
+        'agi', '通用人工智能', 'billion dollar', '数十亿', '百亿'
+    ]
+    for keyword in ultra_high_keywords:
+        if keyword in text:
+            score += 10
+    
+    # 高优先级关键词（+5分）- 重要产品和公司动态
+    high_priority_keywords = [
+        'openai', 'anthropic', 'google ai', 'microsoft', 'meta ai', 'deepmind',
+        'gpt-4', 'claude', 'gemini', 'llama', 'mistral',
+        '发布', 'release', 'launch', 'announce', '开源', 'open source',
+        '融资', 'funding', 'acquisition', '收购', '监管', 'regulation',
+        'api', 'multimodal', '多模态', 'reasoning', '推理'
+    ]
     for keyword in high_priority_keywords:
+        if keyword in text:
+            score += 5
+    
+    # 中优先级关键词（+3分）- 技术进展
+    medium_priority_keywords = [
+        'agent', 'autonomous', '智能体', 'rag', 'fine-tuning', '微调',
+        'prompt engineering', 'embedding', 'vector database',
+        'transformer', 'attention', 'dataset', '数据集',
+        'benchmark', '基准测试', 'evaluation', '评估'
+    ]
+    for keyword in medium_priority_keywords:
         if keyword in text:
             score += 3
     
-    for keyword in medium_priority_keywords:
+    # 应用场景关键词（+2分）- 实际应用
+    application_keywords = [
+        'coding', '编程', 'code generation', 'automation', '自动化',
+        'customer service', '客服', 'chatbot', 'search', '搜索',
+        'image generation', '图像生成', 'video', '视频'
+    ]
+    for keyword in application_keywords:
         if keyword in text:
-            score += 1
+            score += 2
+    
+    # 学术论文降权（-2分）- 除非是顶会
+    if 'arxiv' in news_item.get('source', '').lower():
+        score -= 2
+        # 顶会论文加回来
+        if any(conf in text for conf in ['neurips', 'icml', 'iclr', 'cvpr', 'acl']):
+            score += 5
     
     return score
 
 
 def generate_insight(news_item):
     """
-    生成启示（基于关键词匹配，可接入LLM优化）
+    生成具体可操作的启示建议
     """
     title = news_item['title'].lower()
     summary = news_item['summary'].lower()
+    text = title + ' ' + summary
     
     insights = []
     
-    if any(word in title + summary for word in ['gpt', 'claude', 'gemini', '大模型']):
-        insights.append("💡 关注大模型技术演进，可能影响产品竞争格局")
+    # 大模型发布类
+    if any(word in text for word in ['gpt-4', 'gpt-5', 'claude', 'gemini', 'llama', '发布', 'release']):
+        insights.append("【行动】测试新模型在你的业务场景中的表现，对比现有方案的成本和效果；关注API定价变化，评估是否切换模型")
     
-    if any(word in title + summary for word in ['开源', 'open source', 'github']):
-        insights.append("🔧 开源资源可直接应用于项目开发")
+    # 开源项目类
+    if any(word in text for word in ['开源', 'open source', 'github', 'huggingface']):
+        insights.append("【行动】Fork项目到本地测试，查看文档和示例代码；评估是否可以集成到现有工作流中，降低开发成本")
     
-    if any(word in title + summary for word in ['融资', 'funding', '投资']):
-        insights.append("💰 资本动向反映行业热点，可作为方向参考")
+    # 融资投资类
+    if any(word in text for word in ['融资', 'funding', 'investment', 'billion', 'million', '估值']):
+        insights.append("【行动】研究被投公司的技术方向和商业模式，分析市场热点；关注投资方背景，判断赛道潜力")
     
-    if any(word in title + summary for word in ['监管', 'regulation', '政策', 'policy']):
-        insights.append("⚖️ 政策变化可能影响业务合规要求")
+    # 监管政策类
+    if any(word in text for word in ['监管', 'regulation', 'policy', '合规', '法律']):
+        insights.append("【行动】评估你的AI产品是否符合新政策要求；关注数据隐私、版权、安全等合规要点；必要时咨询法务")
     
-    if any(word in title + summary for word in ['agent', '智能体', 'autonomous']):
-        insights.append("🤖 AI Agent是当前技术前沿，值得深入研究")
+    # AI Agent类
+    if any(word in text for word in ['agent', '智能体', 'autonomous', 'workflow', '自动化']):
+        insights.append("【行动】梳理你工作中的重复性任务，尝试用AI Agent替代；学习LangChain、AutoGPT等框架，构建个人工作流")
     
+    # 编程开发类
+    if any(word in text for word in ['coding', '编程', 'code generation', 'developer', '程序员']):
+        insights.append("【行动】将AI编程助手（如Copilot、Cursor）集成到IDE中；用AI生成代码模板和单元测试，提升开发效率")
+    
+    # 多模态类
+    if any(word in text for word in ['multimodal', '多模态', 'image', 'video', 'audio', '图像', '视频']):
+        insights.append("【行动】探索多模态AI在你的业务中的应用场景，如自动生成营销素材、视频内容分析等；评估Midjourney、Runway等工具")
+    
+    # RAG和知识库类
+    if any(word in text for word in ['rag', 'retrieval', 'knowledge base', '向量数据库', 'embedding']):
+        insights.append("【行动】整理你的文档资料，搭建私有知识库；尝试用RAG技术构建企业内部的AI问答系统，提升信息检索效率")
+    
+    # 学术研究类
+    if any(word in text for word in ['paper', '论文', 'research', 'arxiv', 'neurips', 'icml']):
+        insights.append("【行动】阅读论文摘要和方法部分，了解技术原理；关注论文是否有开源代码，尝试复现关键实验")
+    
+    # 产品应用类
+    if any(word in text for word in ['product', '产品', 'feature', '功能', '应用']):
+        insights.append("【行动】分析该产品的目标用户和核心价值，思考是否有借鉴之处；注册试用，体验产品交互设计")
+    
+    # 默认建议
     if not insights:
-        insights.append("📊 了解行业动态，保持技术敏感度")
+        insights.append("【行动】将该资讯加入收藏或笔记，定期回顾；思考与你当前工作的关联性，是否有启发")
     
-    return ' | '.join(insights)
+    # 返回最重要的2条建议
+    return '\\n'.join(insights[:2])
 
 
 def format_news_html(news_list):
     """
-    格式化新闻为HTML邮件
+    格式化新闻为HTML邮件（优化版：只展示15条最有价值的资讯）
     """
     # 按重要性排序
     for news in news_list:
         news['importance'] = analyze_importance(news)
     
     news_list.sort(key=lambda x: (x['importance'], x['pub_time']), reverse=True)
+    
+    # 只保留前15条最有价值的资讯
+    news_list = news_list[:15]
     
     html = f"""
     <html>
@@ -185,6 +244,7 @@ def format_news_html(news_list):
             .header h1 {{ margin: 0; font-size: 28px; }}
             .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
             .news-item {{ border-left: 4px solid #667eea; padding: 20px; margin-bottom: 25px; background: #f9f9f9; border-radius: 5px; }}
+            .news-item.ultra {{ border-left-color: #8e44ad; background: #f5f0ff; border-left-width: 6px; }}
             .news-item.high {{ border-left-color: #e74c3c; background: #fff5f5; }}
             .news-item.medium {{ border-left-color: #f39c12; background: #fffbf0; }}
             .source {{ display: inline-block; background: #667eea; color: white; padding: 3px 10px; border-radius: 3px; font-size: 12px; margin-bottom: 10px; }}
@@ -205,21 +265,38 @@ def format_news_html(news_list):
             </div>
             
             <div class="stats">
-                <strong>📊 今日统计：</strong> 共收集 {len(news_list)} 条资讯，来自 {len(set(n['source'] for n in news_list))} 个信息源
+                <strong>📊 今日精选：</strong> 从众多资讯中为您精选 <strong>{len(news_list)} 条</strong> 最有价值的AI资讯
             </div>
     """
     
     for i, news in enumerate(news_list, 1):
-        priority_class = 'high' if news['importance'] >= 6 else ('medium' if news['importance'] >= 3 else '')
-        priority_label = '🔥 高优先级' if news['importance'] >= 6 else ('⭐ 中优先级' if news['importance'] >= 3 else '')
+        # 根据重要性分配优先级标签
+        if news['importance'] >= 15:
+            priority_class = 'ultra'
+            priority_label = '🔥 重磅'
+        elif news['importance'] >= 8:
+            priority_class = 'high'
+            priority_label = '⭐ 重要'
+        elif news['importance'] >= 4:
+            priority_class = 'medium'
+            priority_label = '📌 关注'
+        else:
+            priority_class = ''
+            priority_label = ''
+        
+        # 生成一句话精简概括（限制字数）
+        brief_summary = news['summary'][:120] + '...' if len(news['summary']) > 120 else news['summary']
         
         html += f"""
             <div class="news-item {priority_class}">
-                <span class="source">{news['source']}</span>
-                {f'<span class="source" style="background:#e74c3c;margin-left:10px;">{priority_label}</span>' if priority_label else ''}
+                <div style="margin-bottom:10px;">
+                    <span class="source">{news['source']}</span>
+                    {f'<span class="source" style="background:#e74c3c;margin-left:10px;">{priority_label}</span>' if priority_label else ''}
+                    <span style="color:#999;font-size:12px;margin-left:10px;">重要性:{news['importance']}</span>
+                </div>
                 <div class="title">{i}. {news['title']}</div>
-                <div class="summary"><strong>📝 速览：</strong>{news['summary']}</div>
-                <div class="insight"><strong>💡 启示：</strong>{generate_insight(news)}</div>
+                <div class="summary"><strong>📝 一句话速览：</strong>{brief_summary}</div>
+                <div class="insight"><strong>💡 对你能做什么：</strong><br>{generate_insight(news).replace(chr(10), '<br>')}</div>
                 <a href="{news['link']}" class="link" target="_blank">🔗 查看原文</a>
             </div>
         """
