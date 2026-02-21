@@ -162,62 +162,209 @@ def analyze_importance(news_item):
     return score
 
 
-def generate_insight(news_item):
+def generate_chinese_summary(news_item):
     """
-    生成具体可操作的启示建议
+    基于文章内容生成中文精准概括
     """
-    title = news_item['title'].lower()
-    summary = news_item['summary'].lower()
+    title = news_item['title']
+    summary = news_item['summary']
+    
+    # 提取核心信息
     text = title + ' ' + summary
+    
+    # 识别关键要素
+    who = ""
+    what = ""
+    why = ""
+    
+    # 识别主体（公司/机构/产品）
+    companies = ['OpenAI', 'Google', 'Microsoft', 'Meta', 'Anthropic', 'DeepMind', 'Amazon', 'Apple', 'NVIDIA', '特斯拉', '百度', '阿里', '腾讯', '字节跳动']
+    for company in companies:
+        if company.lower() in text.lower():
+            who = company
+            break
+    
+    if not who:
+        products = ['GPT', 'Claude', 'Gemini', 'Llama', 'ChatGPT', 'Copilot', 'Midjourney', 'Stable Diffusion']
+        for product in products:
+            if product.lower() in text.lower():
+                who = product
+                break
+    
+    # 识别动作/事件
+    actions = ['发布', '推出', '开源', '融资', '收购', '合作', '突破', '升级', '支持', '推出', '宣布', '获得']
+    for action in actions:
+        if action in text:
+            what = action
+            break
+    
+    if not what:
+        actions_en = ['releases', 'launches', 'open sources', 'raises', 'acquires', 'partners', 'breakthrough', 'upgrades', 'supports', 'announces']
+        for action in actions_en:
+            if action.lower() in text.lower():
+                what = action
+                break
+    
+    # 识别价值/影响
+    values = ['提升', '降低', '优化', '改进', '解决', '实现', '突破', '创新', '领先', '首次']
+    for value in values:
+        if value in summary:
+            why = value
+            break
+    
+    # 生成中文概括
+    if who and what:
+        if '开源' in text or 'open source' in text.lower():
+            return f"{who} {what}开源项目/技术，开发者可免费使用和修改"
+        elif '融资' in text or 'funding' in text.lower() or 'raises' in text.lower():
+            return f"{who} {what}新一轮融资，获得资本市场认可"
+        elif '发布' in text or '推出' in text or 'releases' in text.lower() or 'launches' in text.lower():
+            if any(word in text for word in ['模型', 'model', '产品', 'product', '功能', 'feature']):
+                return f"{who} {what}新模型/产品/功能，拓展AI应用边界"
+            else:
+                return f"{who} {what}重要更新/动态，值得关注"
+        elif '收购' in text or 'acquires' in text.lower():
+            return f"{who} {what}收购，布局AI生态战略"
+        elif '合作' in text or 'partnership' in text.lower() or 'partners' in text.lower():
+            return f"{who} {what}战略合作，强强联合推动AI发展"
+        elif '突破' in text or 'breakthrough' in text.lower():
+            return f"{who} {what}技术突破，推动AI能力边界"
+        else:
+            return f"{who} {what}新动态，对AI行业有重要影响"
+    else:
+        # 无法提取关键信息时，基于内容类型生成概括
+        if any(word in text for word in ['论文', 'paper', 'research', 'study']):
+            return "最新AI研究成果发布，提出新方法或取得新进展"
+        elif any(word in text for word in ['监管', 'regulation', 'policy', '法律']):
+            return "AI监管政策动态更新，影响行业合规发展方向"
+        elif any(word in text for word in ['投资', '融资', 'funding', 'investment']):
+            return "AI领域投融资动态，反映市场热点和资本趋势"
+        elif any(word in text for word in ['技术', 'technology', '算法', 'algorithm']):
+            return "AI技术新进展，可能改变现有应用方式"
+        else:
+            # 提取摘要核心内容
+            core_content = summary[:80] if len(summary) > 80 else summary
+            return f"{core_content}..."
+
+
+def generate_contextual_insight(news_item):
+    """
+    基于文章具体内容生成个性化启示，完全结合文章内容
+    """
+    title = news_item['title']
+    summary = news_item['summary']
+    source = news_item['source']
+    text = (title + ' ' + summary).lower()
     
     insights = []
     
-    # 大模型发布类
-    if any(word in text for word in ['gpt-4', 'gpt-5', 'claude', 'gemini', 'llama', '发布', 'release']):
-        insights.append("【行动】测试新模型在你的业务场景中的表现，对比现有方案的成本和效果；关注API定价变化，评估是否切换模型")
+    # 根据具体内容生成针对性建议
     
-    # 开源项目类
-    if any(word in text for word in ['开源', 'open source', 'github', 'huggingface']):
-        insights.append("【行动】Fork项目到本地测试，查看文档和示例代码；评估是否可以集成到现有工作流中，降低开发成本")
+    # 1. 如果是新模型发布
+    if any(word in text for word in ['gpt-4', 'gpt-5', 'claude 3', 'claude 4', 'gemini', 'llama 3', '新模型', 'new model']):
+        model_name = ""
+        if 'gpt-4' in text:
+            model_name = "GPT-4"
+        elif 'gpt-5' in text:
+            model_name = "GPT-5"
+        elif 'claude' in text:
+            model_name = "Claude"
+        elif 'gemini' in text:
+            model_name = "Gemini"
+        elif 'llama' in text:
+            model_name = "Llama"
+        
+        if model_name:
+            insights.append(f"【立即行动】访问官网申请{model_name}的API权限或试用资格，在你的实际业务场景中测试3-5个具体用例，对比现有方案在准确率、响应速度、成本三个维度的差异，记录测试结果作为是否切换的依据")
     
-    # 融资投资类
-    if any(word in text for word in ['融资', 'funding', 'investment', 'billion', 'million', '估值']):
-        insights.append("【行动】研究被投公司的技术方向和商业模式，分析市场热点；关注投资方背景，判断赛道潜力")
+    # 2. 如果是开源项目
+    if any(word in text for word in ['开源', 'open source', 'github', 'huggingface', '发布代码']):
+        insights.append(f"【本周任务】点击原文链接进入项目主页，查看README文档了解项目功能，Fork代码到本地环境运行示例，评估该工具是否能解决你当前工作中的具体问题（如数据处理、模型训练、自动化等），如适用则集成到工作流")
     
-    # 监管政策类
-    if any(word in text for word in ['监管', 'regulation', 'policy', '合规', '法律']):
-        insights.append("【行动】评估你的AI产品是否符合新政策要求；关注数据隐私、版权、安全等合规要点；必要时咨询法务")
+    # 3. 如果是融资新闻
+    if any(word in text for word in ['融资', 'funding', 'investment', '估值', 'billion', 'million']):
+        company = ""
+        amount = ""
+        
+        # 尝试提取公司名和金额
+        import re
+        amount_match = re.search(r'(\d+)\s*(million|billion|亿|百万|千万|十亿)', text)
+        if amount_match:
+            amount = amount_match.group(0)
+        
+        insights.append(f"【深度分析】研究这家公司的核心技术方向和产品形态，分析其解决的具体痛点；查看投资方名单（如红杉、A16Z等顶级机构投资说明赛道被看好），思考这个细分领域是否值得你投入时间学习或创业")
     
-    # AI Agent类
-    if any(word in text for word in ['agent', '智能体', 'autonomous', 'workflow', '自动化']):
-        insights.append("【行动】梳理你工作中的重复性任务，尝试用AI Agent替代；学习LangChain、AutoGPT等框架，构建个人工作流")
+    # 4. 如果是监管政策
+    if any(word in text for word in ['监管', 'regulation', 'policy', '合规', '法律', '法案', '欧盟', '美国']):
+        region = ""
+        if '欧盟' in text or 'european' in text or 'eu ' in text:
+            region = "欧盟"
+        elif '美国' in text or 'us ' in text or 'american' in text:
+            region = "美国"
+        elif '中国' in text or 'china' in text:
+            region = "中国"
+        
+        if region:
+            insights.append(f"【合规检查】{region}的新政策可能影响你的AI产品，立即检查：1）用户数据处理是否符合要求；2）模型训练数据是否有版权风险；3）是否需要增加用户告知和同意机制；4）如涉及跨境服务，评估是否需要调整业务模式")
+        else:
+            insights.append(f"【合规检查】新的监管政策可能影响你的AI产品，立即检查数据隐私、版权合规、用户告知等关键环节，必要时咨询专业法务")
     
-    # 编程开发类
-    if any(word in text for word in ['coding', '编程', 'code generation', 'developer', '程序员']):
-        insights.append("【行动】将AI编程助手（如Copilot、Cursor）集成到IDE中；用AI生成代码模板和单元测试，提升开发效率")
+    # 5. 如果是AI Agent相关
+    if any(word in text for word in ['agent', '智能体', 'autonomous', 'auto-gpt', 'workflow自动化']):
+        insights.append(f"【实践建议】列出你每周重复做的3-5项工作（如数据整理、邮件回复、报告生成、信息搜集），选择其中一项用AI Agent工具（如Dify、Coze、LangChain）搭建自动化流程，本周内完成第一个Agent的搭建和测试")
     
-    # 多模态类
-    if any(word in text for word in ['multimodal', '多模态', 'image', 'video', 'audio', '图像', '视频']):
-        insights.append("【行动】探索多模态AI在你的业务中的应用场景，如自动生成营销素材、视频内容分析等；评估Midjourney、Runway等工具")
+    # 6. 如果是编程开发工具
+    if any(word in text for word in ['coding', '编程', 'code generation', 'developer', '程序员', 'ide', 'copilot', 'cursor']):
+        insights.append(f"【效率提升】如果你还在手动写代码，立即下载安装Cursor或GitHub Copilot，在本周的编码工作中全程使用AI辅助，重点关注：1）代码补全准确率；2）Bug检测能力；3）重构建议质量；4）整体开发效率提升比例，记录对比数据")
     
-    # RAG和知识库类
-    if any(word in text for word in ['rag', 'retrieval', 'knowledge base', '向量数据库', 'embedding']):
-        insights.append("【行动】整理你的文档资料，搭建私有知识库；尝试用RAG技术构建企业内部的AI问答系统，提升信息检索效率")
+    # 7. 如果是多模态/图像视频
+    if any(word in text for word in ['multimodal', '多模态', 'image generation', 'video', 'audio', '图像生成', '视频生成', 'sora', 'midjourney', 'runway']):
+        tool_name = ""
+        if 'midjourney' in text:
+            tool_name = "Midjourney"
+        elif 'sora' in text:
+            tool_name = "Sora"
+        elif 'runway' in text:
+            tool_name = "Runway"
+        elif 'dall-e' in text or 'dalle' in text:
+            tool_name = "DALL-E"
+        
+        if tool_name:
+            insights.append(f"【创意实践】注册{tool_name}账号，本周用它完成一个实际任务：如为公众号/小红书生成3张配图、制作一个15秒的产品宣传视频、或设计一套品牌视觉素材，对比传统方式和AI生成在成本、时间、质量上的差异")
+        else:
+            insights.append(f"【创意实践】探索多模态AI在你工作中的应用场景：营销素材生成、产品演示视频、社交媒体配图等，选择一款工具（Midjourney/Runway/即梦）完成一个实际项目")
     
-    # 学术研究类
-    if any(word in text for word in ['paper', '论文', 'research', 'arxiv', 'neurips', 'icml']):
-        insights.append("【行动】阅读论文摘要和方法部分，了解技术原理；关注论文是否有开源代码，尝试复现关键实验")
+    # 8. 如果是RAG/知识库
+    if any(word in text for word in ['rag', 'retrieval', 'knowledge base', '向量数据库', 'embedding', '知识库', '检索增强']):
+        insights.append(f"【知识管理】整理你电脑中散落的文档（PDF、Word、笔记），选择一款工具（如AnythingLLM、FastGPT、Dify）搭建个人/团队知识库，上传10-20份核心文档，测试问答功能，评估是否能提升信息检索效率")
     
-    # 产品应用类
-    if any(word in text for word in ['product', '产品', 'feature', '功能', '应用']):
-        insights.append("【行动】分析该产品的目标用户和核心价值，思考是否有借鉴之处；注册试用，体验产品交互设计")
+    # 9. 如果是学术论文
+    if any(word in text for word in ['paper', '论文', 'research', 'arxiv', 'neurips', 'icml', 'iclr', 'cvpr']):
+        insights.append(f"【学习路径】点击原文链接找到论文PDF，先读摘要和结论了解核心贡献，再看实验结果是否惊艳，如感兴趣则深入方法部分；检查论文是否开源代码，如有则在本地复现关键实验，理解技术原理")
     
-    # 默认建议
+    # 10. 如果是产品功能更新
+    if any(word in text for word in ['feature', '功能', 'product', '产品', 'update', '更新']):
+        insights.append(f"【体验反馈】立即注册/登录体验这个新功能，思考：1）它解决了什么痛点；2）交互设计是否流畅；3）与竞品相比优劣；4）是否值得你在工作中采用；5）对你的产品有何借鉴意义，记录体验报告")
+    
+    # 11. 如果是行业报告/趋势
+    if any(word in text for word in ['report', '报告', 'trend', '趋势', 'market', '市场', 'survey', '调研']):
+        insights.append(f"【战略参考】下载完整报告阅读关键章节（市场规模、增长预测、竞争格局、用户画像），提取3-5个关键数据点，思考这些数据对你的职业规划、产品方向、投资决策有何指导意义，形成一页纸的洞察总结")
+    
+    # 12. 如果是API/开发者工具
+    if any(word in text for word in ['api', 'sdk', 'developer', '开发者', '接口', 'integration']):
+        insights.append(f"【技术评估】查看API文档了解功能覆盖范围和定价策略，申请API Key在你的测试环境调用，评估：1）功能是否满足需求；2）稳定性和延迟表现；3）成本是否在预算内；4）集成难度，形成技术选型评估报告")
+    
+    # 如果没有匹配到特定类型，生成通用建议
     if not insights:
-        insights.append("【行动】将该资讯加入收藏或笔记，定期回顾；思考与你当前工作的关联性，是否有启发")
+        # 基于摘要内容生成建议
+        if len(summary) > 50:
+            core_topic = summary[:60]
+            insights.append(f"【深度了解】点击原文阅读完整内容，理解{core_topic}...的核心要点，思考这与你的专业领域或工作有何关联，是否需要进一步学习或调整方向")
+        else:
+            insights.append(f"【深度了解】点击原文阅读完整内容，提取核心观点和技术要点，评估对你当前工作的参考价值，如需深入了解可搜索相关技术文档或教程")
     
-    # 返回最重要的2条建议
-    return '\\n'.join(insights[:2])
+    # 返回最相关的建议（最多2条）
+    return '\\n\\n'.join(insights[:2])
 
 
 def format_news_html(news_list):
@@ -284,19 +431,21 @@ def format_news_html(news_list):
             priority_class = ''
             priority_label = ''
         
-        # 生成一句话精简概括（限制字数）
-        brief_summary = news['summary'][:120] + '...' if len(news['summary']) > 120 else news['summary']
+        # 生成中文精准概括
+        chinese_summary = generate_chinese_summary(news)
+        
+        # 生成基于文章内容的个性化启示
+        contextual_insight = generate_contextual_insight(news)
         
         html += f"""
             <div class="news-item {priority_class}">
                 <div style="margin-bottom:10px;">
                     <span class="source">{news['source']}</span>
                     {f'<span class="source" style="background:#e74c3c;margin-left:10px;">{priority_label}</span>' if priority_label else ''}
-                    <span style="color:#999;font-size:12px;margin-left:10px;">重要性:{news['importance']}</span>
                 </div>
                 <div class="title">{i}. {news['title']}</div>
-                <div class="summary"><strong>📝 一句话速览：</strong>{brief_summary}</div>
-                <div class="insight"><strong>💡 对你能做什么：</strong><br>{generate_insight(news).replace(chr(10), '<br>')}</div>
+                <div class="summary"><strong>📝 一句话速览：</strong>{chinese_summary}</div>
+                <div class="insight"><strong>💡 对你能做什么：</strong><br>{contextual_insight.replace(chr(10), '<br>')}</div>
                 <a href="{news['link']}" class="link" target="_blank">🔗 查看原文</a>
             </div>
         """
