@@ -165,86 +165,147 @@ def analyze_importance(news_item):
 def generate_chinese_summary(news_item):
     """
     基于文章内容生成中文精准概括
+    处理英文RSS源内容，提取核心信息并翻译为自然中文
     """
     title = news_item['title']
     summary = news_item['summary']
+    text_lower = (title + ' ' + summary).lower()
     
-    # 提取核心信息
-    text = title + ' ' + summary
-    
-    # 识别关键要素
+    # 识别主体（公司/机构/产品）- 优先匹配
     who = ""
-    what = ""
-    why = ""
-    
-    # 识别主体（公司/机构/产品）
-    companies = ['OpenAI', 'Google', 'Microsoft', 'Meta', 'Anthropic', 'DeepMind', 'Amazon', 'Apple', 'NVIDIA', '特斯拉', '百度', '阿里', '腾讯', '字节跳动']
-    for company in companies:
-        if company.lower() in text.lower():
-            who = company
+    companies = {
+        'openai': 'OpenAI', 'google': 'Google', 'microsoft': 'Microsoft', 
+        'meta': 'Meta', 'anthropic': 'Anthropic', 'deepmind': 'DeepMind',
+        'amazon': 'Amazon', 'apple': 'Apple', 'nvidia': 'NVIDIA',
+        '百度': '百度', '阿里': '阿里巴巴', '腾讯': '腾讯', '字节跳动': '字节跳动',
+        '华为': '华为', '小米': '小米'
+    }
+    for key, name in companies.items():
+        if key in text_lower:
+            who = name
             break
     
+    # 识别产品名
     if not who:
-        products = ['GPT', 'Claude', 'Gemini', 'Llama', 'ChatGPT', 'Copilot', 'Midjourney', 'Stable Diffusion']
-        for product in products:
-            if product.lower() in text.lower():
-                who = product
+        products = {
+            'gpt-5': 'GPT-5', 'gpt-4': 'GPT-4', 'gpt-3': 'GPT-3', 'chatgpt': 'ChatGPT',
+            'claude': 'Claude', 'gemini': 'Gemini', 'llama': 'Llama', 'mistral': 'Mistral',
+            'copilot': 'Copilot', 'midjourney': 'Midjourney', 'stable diffusion': 'Stable Diffusion',
+            'sora': 'Sora', 'dall-e': 'DALL-E', 'runway': 'Runway'
+        }
+        for key, name in products.items():
+            if key in text_lower:
+                who = name
                 break
     
-    # 识别动作/事件
-    actions = ['发布', '推出', '开源', '融资', '收购', '合作', '突破', '升级', '支持', '推出', '宣布', '获得']
-    for action in actions:
-        if action in text:
-            what = action
+    # 识别核心动作/事件（中英双语）
+    action_keywords = {
+        # 发布类
+        'releases': '发布', 'launches': '推出', 'announces': '宣布', 'introduces': '推出',
+        '发布': '发布', '推出': '推出', '宣布': '宣布',
+        # 开源类
+        'open source': '开源', 'open sources': '开源', '开源': '开源',
+        # 融资类
+        'raises': '获得', 'funding': '融资', '融资': '融资', 'investment': '投资',
+        # 收购类
+        'acquires': '收购', 'acquisition': '收购', '收购': '收购',
+        # 合作类
+        'partners': '与', 'partnership': '合作', 'collaborates': '合作', '合作': '合作',
+        # 突破类
+        'breakthrough': '实现突破', 'achieves': '实现', '突破': '实现突破',
+        # 升级类
+        'upgrades': '升级', 'updates': '更新', '升级': '升级', '更新': '更新',
+        # 支持类
+        'supports': '支持', 'enables': '支持', '支持': '支持'
+    }
+    
+    what = ""
+    for en_action, cn_action in action_keywords.items():
+        if en_action in text_lower:
+            what = cn_action
             break
     
-    if not what:
-        actions_en = ['releases', 'launches', 'open sources', 'raises', 'acquires', 'partners', 'breakthrough', 'upgrades', 'supports', 'announces']
-        for action in actions_en:
-            if action.lower() in text.lower():
-                what = action
-                break
+    # 识别对象/内容
+    obj = ""
+    if any(word in text_lower for word in ['new model', '新模型', 'model', '模型']):
+        obj = "新模型"
+    elif any(word in text_lower for word in ['new feature', '新功能', 'feature', '功能']):
+        obj = "新功能"
+    elif any(word in text_lower for word in ['new product', '新产品', 'product', '产品']):
+        obj = "新产品"
+    elif any(word in text_lower for word in ['api', '接口']):
+        obj = "API接口"
+    elif any(word in text_lower for word in ['tool', '工具']):
+        obj = "工具"
+    elif any(word in text_lower for word in ['platform', '平台']):
+        obj = "平台"
+    elif any(word in text_lower for word in ['research', 'paper', '论文', '研究']):
+        obj = "研究成果"
+    elif any(word in text_lower for word in ['framework', '框架']):
+        obj = "框架"
     
     # 识别价值/影响
-    values = ['提升', '降低', '优化', '改进', '解决', '实现', '突破', '创新', '领先', '首次']
-    for value in values:
-        if value in summary:
-            why = value
-            break
+    impact = ""
+    if any(word in text_lower for word in ['improve', '提升', 'better', '更好']):
+        impact = "性能提升"
+    elif any(word in text_lower for word in ['faster', '更快', 'speed', '速度']):
+        impact = "速度更快"
+    elif any(word in text_lower for word in ['cheaper', '更便宜', 'cost', '成本']):
+        impact = "成本降低"
+    elif any(word in text_lower for word in ['free', '免费']):
+        impact = "免费开放"
+    elif any(word in text_lower for word in ['multimodal', '多模态']):
+        impact = "支持多模态"
     
-    # 生成中文概括
+    # 组合生成中文概括
     if who and what:
-        if '开源' in text or 'open source' in text.lower():
-            return f"{who} {what}开源项目/技术，开发者可免费使用和修改"
-        elif '融资' in text or 'funding' in text.lower() or 'raises' in text.lower():
-            return f"{who} {what}新一轮融资，获得资本市场认可"
-        elif '发布' in text or '推出' in text or 'releases' in text.lower() or 'launches' in text.lower():
-            if any(word in text for word in ['模型', 'model', '产品', 'product', '功能', 'feature']):
-                return f"{who} {what}新模型/产品/功能，拓展AI应用边界"
+        # 有主体和动作
+        if '开源' in what:
+            return f"{who} 开源{obj if obj else '项目/技术'}，开发者可免费使用"
+        elif what in ['获得', '融资']:
+            return f"{who} 获得{obj if obj else '新一轮'}融资，加速AI业务发展"
+        elif what in ['收购']:
+            return f"{who} 收购{obj if obj else '相关公司'}，拓展业务版图"
+        elif what in ['合作', '与']:
+            return f"{who} {what}合作伙伴{obj if obj else ''}，强强联合"
+        elif what in ['发布', '推出', '宣布']:
+            if obj:
+                return f"{who} {what}{obj}{'，' + impact if impact else ''}"
             else:
-                return f"{who} {what}重要更新/动态，值得关注"
-        elif '收购' in text or 'acquires' in text.lower():
-            return f"{who} {what}收购，布局AI生态战略"
-        elif '合作' in text or 'partnership' in text.lower() or 'partners' in text.lower():
-            return f"{who} {what}战略合作，强强联合推动AI发展"
-        elif '突破' in text or 'breakthrough' in text.lower():
-            return f"{who} {what}技术突破，推动AI能力边界"
+                return f"{who} {what}重要更新，{impact if impact else '值得关注'}"
+        elif what in ['升级', '更新']:
+            return f"{who} {what}{obj if obj else '产品'}{'，' + impact if impact else ''}"
+        elif what in ['实现突破']:
+            return f"{who} {what}{obj if obj else ''}，推动AI技术进步"
         else:
-            return f"{who} {what}新动态，对AI行业有重要影响"
+            return f"{who} {what}{obj if obj else '新动态'}，{impact if impact else '值得关注'}"
     else:
-        # 无法提取关键信息时，基于内容类型生成概括
-        if any(word in text for word in ['论文', 'paper', 'research', 'study']):
-            return "最新AI研究成果发布，提出新方法或取得新进展"
-        elif any(word in text for word in ['监管', 'regulation', 'policy', '法律']):
-            return "AI监管政策动态更新，影响行业合规发展方向"
-        elif any(word in text for word in ['投资', '融资', 'funding', 'investment']):
-            return "AI领域投融资动态，反映市场热点和资本趋势"
-        elif any(word in text for word in ['技术', 'technology', '算法', 'algorithm']):
-            return "AI技术新进展，可能改变现有应用方式"
+        # 无法提取完整信息，基于内容类型生成
+        if any(word in text_lower for word in ['paper', 'research', 'arxiv', '论文', '研究']):
+            if who:
+                return f"{who} 发布最新研究成果，提出创新方法"
+            return "最新AI研究论文发布，提出新方法或取得突破"
+        elif any(word in text_lower for word in ['regulation', 'policy', '监管', '政策', '法律']):
+            return "AI监管政策更新，影响行业合规与发展方向"
+        elif any(word in text_lower for word in ['funding', 'investment', '融资', '投资']):
+            return "AI领域投融资动态，反映资本市场热点趋势"
+        elif any(word in text_lower for word in ['open source', 'github', '开源']):
+            return "开源AI项目发布，开发者可免费使用和贡献"
+        elif any(word in text_lower for word in ['agent', 'autonomous', '智能体']):
+            return "AI Agent技术新进展，推动自动化应用发展"
+        elif any(word in text_lower for word in ['multimodal', 'image', 'video', '多模态', '图像', '视频']):
+            return "多模态AI技术更新，拓展应用场景边界"
+        elif any(word in text_lower for word in ['code', 'coding', 'programming', '编程']):
+            return "AI编程工具更新，提升开发效率"
         else:
-            # 提取摘要核心内容
-            core_content = summary[:80] if len(summary) > 80 else summary
-            return f"{core_content}..."
+            # 提取核心内容，翻译为中文风格
+            # 清理并简化摘要
+            clean_summary = summary[:100] if len(summary) > 100 else summary
+            # 如果是纯英文，返回一个通用的中文描述
+            if who:
+                return f"{who} 发布重要动态，涉及{obj if obj else 'AI技术'}领域"
+            else:
+                return f"AI领域新动态：{clean_summary[:60]}{'...' if len(clean_summary) > 60 else ''}"
 
 
 def generate_contextual_insight(news_item):
