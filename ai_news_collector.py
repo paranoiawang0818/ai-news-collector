@@ -354,7 +354,7 @@ def generate_contextual_insight(news_item):
     基于文章具体内容提取可操作建议
     直接分析文章内容，给出针对性建议
     """
-    return extract_actionable_insight(news_item)
+    return generate_actionable_insight(news_item)
 
 
 def format_news_html(news_list):
