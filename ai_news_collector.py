@@ -162,149 +162,191 @@ def analyze_importance(news_item):
     return score
 
 
-def extract_key_sentences(text, max_sentences=2):
+def translate_to_chinese(text):
     """
-    从文本中提取关键句子
+    简单的英文到中文翻译映射
+    基于常见AI术语和句式进行翻译
     """
-    # 清理文本
-    text = text.replace('  ', ' ').strip()
+    # 定义翻译映射表
+    translations = {
+        # 常见动词
+        'announces': '宣布',
+        'launches': '推出',
+        'releases': '发布',
+        'introduces': '推出',
+        'unveils': ' unveiled',
+        'debuts': '首次亮相',
+        'introducing': '推出',
+        'presents': '展示',
+        'reveals': ' revealed',
+        
+        # 常见名词
+        'new model': '新模型',
+        'new feature': '新功能',
+        'new product': '新产品',
+        'ai model': 'AI模型',
+        'language model': '语言模型',
+        'multimodal model': '多模态模型',
+        'open source': '开源',
+        'api': 'API接口',
+        'benchmark': '基准测试',
+        'performance': '性能',
+        'accuracy': '准确率',
+        'efficiency': '效率',
+        'capability': '能力',
+        'feature': '功能',
+        'update': '更新',
+        'version': '版本',
+        
+        # 常见形容词
+        'improved': '改进的',
+        'enhanced': '增强的',
+        'advanced': '先进的',
+        'powerful': '强大的',
+        'faster': '更快的',
+        'better': '更好的',
+        'larger': '更大的',
+        'smaller': '更小的',
+        
+        # 常见句式
+        'is now available': '现已可用',
+        'is now open': '现已开放',
+        'is released': '已发布',
+        'can now': '现在可以',
+        'allows users to': '允许用户',
+        'enables': '使能够',
+        'supports': '支持',
+        'includes': '包括',
+        'offers': '提供',
+        'provides': '提供',
+        
+        # 技术术语
+        'training': '训练',
+        'inference': '推理',
+        'fine-tuning': '微调',
+        'prompt': '提示词',
+        'token': '令牌',
+        'parameter': '参数',
+        'dataset': '数据集',
+        'algorithm': '算法',
+        'architecture': '架构',
+        
+        # 应用场景
+        'coding': '编程',
+        'writing': '写作',
+        'analysis': '分析',
+        'generation': '生成',
+        'translation': '翻译',
+        'summarization': '摘要',
+        'classification': '分类',
+        'prediction': '预测',
+    }
     
-    # 按句子分割（支持中英文标点）
-    import re
-    sentences = re.split(r'[.!?。！？]+', text)
-    sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
+    # 转换为小写进行匹配
+    text_lower = text.lower()
+    result = text
     
-    # 选择前几个有意义的句子
-    key_sentences = []
-    for sent in sentences[:max_sentences]:
-        if len(sent) > 20:
-            key_sentences.append(sent)
+    # 替换匹配的词组
+    for eng, chn in translations.items():
+        if eng.lower() in text_lower:
+            # 保留原始大小写匹配
+            import re
+            result = re.sub(re.escape(eng), chn, result, flags=re.IGNORECASE)
     
-    return ' '.join(key_sentences) if key_sentences else text[:150]
+    return result
 
 
 def generate_chinese_summary(news_item):
     """
-    基于文章内容生成中文精准概括
-    直接提取文章核心内容，不做预设模板匹配
+    基于文章内容生成中文概括
+    提取文章核心内容并翻译为中文
     """
     title = news_item['title']
     summary = news_item['summary']
     
-    # 提取文章核心内容（优先使用摘要，提取关键句子）
-    core_content = extract_key_sentences(summary, max_sentences=1)
+    # 提取核心句子
+    import re
+    text = summary if len(summary) > 50 else title + ' ' + summary
     
-    # 如果摘要太短，结合标题
-    if len(core_content) < 30:
-        core_content = title + ' ' + core_content
+    # 分割句子并选择第一句
+    sentences = re.split(r'[.!?。！？]+', text)
+    first_sentence = ''
+    for sent in sentences:
+        sent = sent.strip()
+        if len(sent) > 20:
+            first_sentence = sent
+            break
     
-    # 限制长度，确保简洁
-    if len(core_content) > 120:
-        core_content = core_content[:120] + '...'
+    if not first_sentence:
+        first_sentence = text[:150]
     
-    return core_content
+    # 翻译为中文
+    chinese_summary = translate_to_chinese(first_sentence)
+    
+    # 限制长度
+    if len(chinese_summary) > 120:
+        chinese_summary = chinese_summary[:120] + '...'
+    
+    return chinese_summary
 
 
-def extract_actionable_insight(news_item):
+def generate_actionable_insight(news_item):
     """
-    基于文章具体内容提取可操作建议
-    直接分析文章内容，给出针对性建议
+    基于文章具体内容生成建议
+    不使用预设语料库，直接分析文章内容
     """
     title = news_item['title']
     summary = news_item['summary']
-    full_text = title + ' ' + summary
-    text_lower = full_text.lower()
+    full_text = (title + ' ' + summary).lower()
     
-    insights = []
+    # 提取文章中提到的具体名词（技术、产品、公司等）
+    import re
     
-    # 分析文章提到的具体技术/工具/方法
-    mentioned_items = []
+    # 提取大写单词（通常是产品名、公司名）
+    capitalized_words = re.findall(r'\b[A-Z][a-zA-Z]+\b', title)
     
-    # 检测提到的模型/产品
-    models = {
-        'gpt-4': 'GPT-4', 'gpt-5': 'GPT-5', 'chatgpt': 'ChatGPT',
-        'claude': 'Claude', 'gemini': 'Gemini', 'llama': 'Llama',
-        'copilot': 'Copilot', 'cursor': 'Cursor',
-        'midjourney': 'Midjourney', 'stable diffusion': 'Stable Diffusion',
-        'sora': 'Sora', 'dall-e': 'DALL-E'
-    }
-    for key, name in models.items():
-        if key in text_lower:
-            mentioned_items.append(('model', name))
+    # 提取引号中的内容
+    quoted_text = re.findall(r'["\']([^"\']+)["\']', title + ' ' + summary)
     
-    # 检测提到的技术/框架
-    techs = {
-        'langchain': 'LangChain', 'autogpt': 'AutoGPT',
-        'rag': 'RAG', 'vector database': '向量数据库',
-        'fine-tuning': '微调', 'prompt engineering': '提示工程',
-        'embedding': 'Embedding', 'transformer': 'Transformer'
-    }
-    for key, name in techs.items():
-        if key in text_lower:
-            mentioned_items.append(('tech', name))
+    # 提取版本号
+    version_pattern = re.findall(r'\b(v?\d+\.?\d*)\b', title)
     
-    # 检测提到的应用场景
-    applications = []
-    if any(word in text_lower for word in ['coding', 'programming', 'developer', '代码', '编程']):
-        applications.append('编程开发')
-    if any(word in text_lower for word in ['writing', 'content', '写作', '内容']):
-        applications.append('内容创作')
-    if any(word in text_lower for word in ['image', 'video', '图像', '视频', 'generation']):
-        applications.append('图像视频生成')
-    if any(word in text_lower for word in ['data', 'analysis', '数据', '分析']):
-        applications.append('数据分析')
-    if any(word in text_lower for word in ['customer service', 'chatbot', '客服', '机器人']):
-        applications.append('客服对话')
-    if any(word in text_lower for word in ['automation', 'workflow', '自动化', '工作流']):
-        applications.append('工作流自动化')
+    # 提取URL中的项目名
+    url_pattern = re.findall(r'github\.com/(\S+)', summary)
     
-    # 根据检测到的内容生成具体建议
+    # 构建建议 - 完全基于提取的内容
+    suggestions = []
     
-    # 如果有具体模型/产品被提到
-    if mentioned_items:
-        items_str = '、'.join([item[1] for item in mentioned_items[:2]])
-        if any(item[0] == 'model' for item in mentioned_items):
-            insights.append(f"【立即体验】访问官网了解{items_str}的具体功能，申请试用权限，在你的实际工作场景中测试其效果，记录使用体验和适用场景")
+    # 如果有提到具体产品/技术名称
+    if capitalized_words:
+        items = capitalized_words[:3]  # 最多取3个
+        items_str = '、'.join(items)
+        suggestions.append(f"了解文章中提到的{items_str}的具体信息，评估是否与你当前的工作或学习相关")
     
-    # 如果有具体技术被提到
-    tech_items = [item[1] for item in mentioned_items if item[0] == 'tech']
-    if tech_items:
-        tech_str = '、'.join(tech_items[:2])
-        insights.append(f"【技术学习】搜索{tech_str}的官方文档和教程，了解其原理和应用场景，尝试搭建一个最小可行示例，评估是否能解决你的实际问题")
+    # 如果有版本号
+    if version_pattern:
+        ver = version_pattern[0]
+        suggestions.append(f"关注{ver}版本的新特性，对比之前版本的变化，思考是否需要升级或尝试")
     
-    # 如果有应用场景
-    if applications:
-        app_str = '、'.join(applications[:2])
-        insights.append(f"【场景应用】思考{app_str}场景下你当前的工作流程，找出可以引入AI优化的环节，选择一款合适的工具进行试点")
+    # 如果有GitHub链接
+    if url_pattern:
+        repo = url_pattern[0]
+        suggestions.append(f"访问GitHub仓库({repo})查看项目详情，阅读文档了解使用方法，如有兴趣可克隆到本地测试")
     
-    # 如果提到开源
-    if any(word in text_lower for word in ['open source', 'github', '开源']):
-        insights.append(f"【开源实践】点击原文链接查看项目GitHub仓库，阅读README了解使用方法，克隆代码到本地运行，评估是否适合集成到你的项目中")
+    # 如果有引用的重要内容
+    if quoted_text:
+        quote = quoted_text[0][:50]
+        suggestions.append(f"文章中提到「{quote}...」，深入理解这个概念或技术的含义和应用场景")
     
-    # 如果提到研究/论文
-    if any(word in text_lower for word in ['paper', 'research', 'arxiv', '论文', '研究']):
-        insights.append(f"【学习跟进】点击原文链接阅读论文摘要，了解核心创新点，查看是否有开源代码，如有则尝试复现关键实验，理解技术原理")
-    
-    # 如果提到数据/性能指标
-    if any(word in text_lower for word in ['accuracy', 'performance', 'benchmark', '准确率', '性能']):
-        insights.append(f"【对比评估】关注文中提到的性能数据，与你当前使用的方案进行对比，评估是否值得切换或尝试")
-    
-    # 如果没有提取到具体建议，基于内容生成通用建议
-    if not insights:
-        # 提取文章关键词
-        keywords = []
-        important_words = ['AI', 'model', 'tool', 'platform', 'technology', 'feature', 'update']
-        for word in important_words:
-            if word.lower() in text_lower:
-                keywords.append(word)
-        
-        if keywords:
-            insights.append(f"【深入了解】点击原文阅读完整内容，重点关注{'、'.join(keywords[:3])}相关信息，思考对你当前工作或学习的参考价值")
+    # 如果没有提取到具体内容，基于文章长度和来源给出通用建议
+    if not suggestions:
+        if len(summary) > 200:
+            suggestions.append("文章内容较丰富，点击原文链接阅读完整内容，提取对你有价值的信息点")
         else:
-            insights.append(f"【信息跟进】点击原文链接阅读详细内容，提取核心观点和技术要点，评估是否需要进一步学习或采取行动")
+            suggestions.append("点击原文链接了解详细信息，评估该资讯对你当前工作或学习的参考价值")
     
     # 返回最多2条建议
-    return '\\n\\n'.join(insights[:2])
+    return '\\n'.join(suggestions[:2])
 
 
 def generate_contextual_insight(news_item):
