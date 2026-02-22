@@ -164,113 +164,114 @@ def analyze_importance(news_item):
 
 def generate_chinese_summary(news_item):
     """
-    基于文章内容生成中文概括
-    直接提取文章核心内容，用中文重新组织表达
+    生成中文一句话概括
+    提取文章核心要素，用简洁的中文表达
     """
     title = news_item['title']
     summary = news_item['summary']
+    text = (title + ' ' + summary).lower()
     
-    # 提取核心内容（优先使用标题，因为标题通常包含关键信息）
-    text = title
-    
-    # 如果摘要有意义，结合使用
-    if len(summary) > 30:
-        # 提取摘要的第一句
-        import re
-        sentences = re.split(r'[.!?。！？]+', summary)
-        for sent in sentences:
-            sent = sent.strip()
-            if len(sent) > 20 and len(sent) < 200:
-                text = title + ' ' + sent
-                break
-    
-    # 提取关键实体（公司、产品、技术）
-    text_lower = text.lower()
-    
-    # 识别主体
+    # 提取主体（公司/产品）
     who = ""
-    companies = ['OpenAI', 'Google', 'Microsoft', 'Meta', 'Anthropic', 'DeepMind', 'Amazon', 'Apple', 'NVIDIA', '百度', '阿里', '腾讯', '字节跳动']
-    for company in companies:
-        if company.lower() in text_lower:
-            who = company
+    companies = {
+        'openai': 'OpenAI', 'google': '谷歌', 'microsoft': '微软',
+        'meta': 'Meta', 'anthropic': 'Anthropic', 'deepmind': 'DeepMind',
+        'amazon': '亚马逊', 'apple': '苹果', 'nvidia': '英伟达',
+        '百度': '百度', '阿里': '阿里巴巴', '腾讯': '腾讯', '字节跳动': '字节跳动'
+    }
+    for key, name in companies.items():
+        if key in text:
+            who = name
             break
     
-    # 识别产品
+    # 如果没有识别到公司，识别产品
     if not who:
-        products = ['GPT-4', 'GPT-5', 'ChatGPT', 'Claude', 'Gemini', 'Llama', 'Copilot', 'Cursor', 'Midjourney', 'Stable Diffusion', 'Sora', 'DALL-E']
-        for product in products:
-            if product.lower() in text_lower:
-                who = product
+        products = {
+            'gpt-4': 'GPT-4', 'gpt-5': 'GPT-5', 'chatgpt': 'ChatGPT',
+            'claude': 'Claude', 'gemini': 'Gemini', 'llama': 'Llama',
+            'copilot': 'Copilot', 'cursor': 'Cursor',
+            'midjourney': 'Midjourney', 'stable diffusion': 'Stable Diffusion',
+            'sora': 'Sora', 'dall-e': 'DALL-E'
+        }
+        for key, name in products.items():
+            if key in text:
+                who = name
                 break
     
-    # 识别核心动作
-    action = ""
-    if any(word in text_lower for word in ['announces', 'announced', '宣布']):
-        action = "宣布"
-    elif any(word in text_lower for word in ['launches', 'launched', '推出', '发布']):
-        action = "推出"
-    elif any(word in text_lower for word in ['releases', 'released', '发布']):
-        action = "发布"
-    elif any(word in text_lower for word in ['introduces', 'introduced', '推出']):
-        action = "推出"
-    elif any(word in text_lower for word in ['unveils', 'unveiled']):
-        action = " unveiled"
-    elif any(word in text_lower for word in ['open source', '开源', 'github']):
-        action = "开源"
-    elif any(word in text_lower for word in ['update', 'updates', '升级', '更新']):
-        action = "更新"
+    # 识别核心事件
+    event = ""
+    if any(w in text for w in ['announces', 'announced', '宣布']):
+        event = "宣布"
+    elif any(w in text for w in ['launches', 'launched', '推出']):
+        event = "推出"
+    elif any(w in text for w in ['releases', 'released', '发布']):
+        event = "发布"
+    elif any(w in text for w in ['open source', '开源']):
+        event = "开源"
+    elif any(w in text for w in ['acquires', 'acquired', '收购']):
+        event = "收购"
+    elif any(w in text for w in ['raises', 'raised', '融资']):
+        event = "获得融资"
+    elif any(w in text for w in ['partnership', 'partners', '合作']):
+        event = "达成合作"
+    elif any(w in text for w in ['update', 'updates', '更新']):
+        event = "更新"
     
-    # 识别对象
-    obj = ""
-    if any(word in text_lower for word in ['new model', '新模型', 'model', '模型']):
-        obj = "新模型"
-    elif any(word in text_lower for word in ['new feature', '新功能', 'feature', '功能']):
-        obj = "新功能"
-    elif any(word in text_lower for word in ['new product', '新产品', 'product', '产品']):
-        obj = "新产品"
-    elif any(word in text_lower for word in ['api', '接口']):
-        obj = "API"
-    elif any(word in text_lower for word in ['tool', '工具']):
-        obj = "工具"
-    elif any(word in text_lower for word in ['platform', '平台']):
-        obj = "平台"
-    elif any(word in text_lower for word in ['framework', '框架']):
-        obj = "框架"
+    # 识别内容
+    content = ""
+    if any(w in text for w in ['new model', '模型', 'model']):
+        content = "新模型"
+    elif any(w in text for w in ['new feature', '功能', 'feature']):
+        content = "新功能"
+    elif any(w in text for w in ['new product', '产品', 'product']):
+        content = "新产品"
+    elif any(w in text for w in ['api']):
+        content = "API"
+    elif any(w in text for w in ['tool', '工具']):
+        content = "工具"
+    elif any(w in text for w in ['platform', '平台']):
+        content = "平台"
+    elif any(w in text for w in ['framework', '框架']):
+        content = "框架"
+    elif any(w in text for w in ['paper', '论文', 'research', '研究']):
+        content = "研究成果"
+    elif any(w in text for w in ['dataset', '数据集']):
+        content = "数据集"
     
-    # 识别价值/特点
-    value = ""
-    if any(word in text_lower for word in ['improved', 'better', '提升', '改进']):
-        value = "性能改进"
-    elif any(word in text_lower for word in ['faster', 'speed', '更快', '速度']):
-        value = "速度更快"
-    elif any(word in text_lower for word in ['multimodal', '多模态']):
-        value = "支持多模态"
-    elif any(word in text_lower for word in ['free', '免费', 'open source', '开源']):
-        value = "免费开放"
+    # 识别关键特性
+    feature = ""
+    if any(w in text for w in ['multimodal', '多模态', 'image', 'video', '图像', '视频']):
+        feature = "支持多模态"
+    elif any(w in text for w in ['faster', 'speed', '更快', '速度']):
+        feature = "速度更快"
+    elif any(w in text for w in ['improved', 'better', '提升', '改进']):
+        feature = "性能提升"
+    elif any(w in text for w in ['free', '免费']):
+        feature = "免费开放"
+    elif any(w in text for w in ['open source', '开源']):
+        feature = "开源"
     
-    # 组合成中文概括
-    parts = []
+    # 组合成一句话中文概括
+    result_parts = []
     if who:
-        parts.append(who)
-    if action:
-        parts.append(action)
-    if obj:
-        parts.append(obj)
-    if value:
-        parts.append(f"，{value}")
+        result_parts.append(who)
+    if event:
+        result_parts.append(event)
+    if content:
+        result_parts.append(content)
     
-    if len(parts) >= 2:
-        chinese_summary = ''.join(parts)
+    # 如果有特性，用逗号连接
+    if feature and len(result_parts) >= 2:
+        result = ''.join(result_parts) + "，" + feature
+    elif len(result_parts) >= 2:
+        result = ''.join(result_parts)
+    elif len(result_parts) == 1:
+        result = result_parts[0] + "有新动态"
     else:
-        # 如果无法提取完整信息，使用标题+摘要的方式
-        # 清理文本，移除多余空格
-        clean_text = text.replace('  ', ' ').strip()
-        # 限制长度
-        if len(clean_text) > 100:
-            clean_text = clean_text[:100] + '...'
-        chinese_summary = clean_text
+        # 无法提取时，返回简化版标题
+        result = title[:60] if len(title) <= 60 else title[:60] + "..."
     
-    return chinese_summary
+    return result
 
 
 def generate_actionable_insight(news_item):
