@@ -22,6 +22,90 @@ SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'your_email@qq.com')
 SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD', 'your_qq_auth_code')  # QQ邮箱授权码
 RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL', 'paranoiawang0818@qq.com')
 
+# 财富认知知识库
+WEALTH_KNOWLEDGE = [
+    {
+        "book": "《百万富翁快车道》",
+        "knowledge": "财富不是靠省钱积累的，而是通过创造价值获得的。真正的财富来自于建立能够产生被动收入的系统，而不是出卖时间换取金钱。"
+    },
+    {
+        "book": "《百万富翁快车道》",
+        "knowledge": "时间是你最宝贵的资产。富人用金钱购买时间，穷人用时间换取金钱。要学会将时间投资在能够产生复利效应的事情上。"
+    },
+    {
+        "book": "《定投改变命运》",
+        "knowledge": "定投的核心不是择时，而是纪律。长期坚持定投优质资产，利用时间的复利效应，普通人也能实现财富自由。"
+    },
+    {
+        "book": "《定投改变命运》",
+        "knowledge": "投资最重要的是认知升级。你永远赚不到超出你认知范围之外的钱，除非靠运气，但靠运气赚到的钱最终会凭实力亏掉。"
+    },
+    {
+        "book": "《有钱人和你想的不一样》",
+        "knowledge": "富人关注机会，穷人关注障碍。当面对挑战时，富人问'我怎样才能做到'，穷人说'我做不到'。思维方式决定财富结果。"
+    },
+    {
+        "book": "《有钱人和你想的不一样》",
+        "knowledge": "富人让钱为他们努力工作，穷人努力工作赚钱。要学会建立资产，让资产产生现金流，而不是一直靠劳动换取收入。"
+    },
+    {
+        "book": "《财富自由之路》",
+        "knowledge": "注意力是你最宝贵的财富。把注意力放在成长上，而不是抱怨上；放在解决方案上，而不是问题上；放在未来上，而不是过去上。"
+    },
+    {
+        "book": "《财富自由之路》",
+        "knowledge": "所谓财富自由，就是被动收入大于日常开支。实现财富自由的关键是提升个人商业价值，建立可持续的收入来源。"
+    },
+    {
+        "book": "《邻家的百万富翁》",
+        "knowledge": "真正的富人往往生活简朴，他们不会为了炫耀而消费。他们把钱投资在能够增值的资产上，而不是贬值的消费品上。"
+    },
+    {
+        "book": "《邻家的百万富翁》",
+        "knowledge": "积累财富的公式：收入 - 支出 = 储蓄，储蓄 × 投资回报率 = 财富。控制支出、提高储蓄率、学会投资，是积累财富的三大支柱。"
+    },
+    {
+        "book": "《纳瓦尔宝典》",
+        "knowledge": "致富需要杠杆。商业杠杆来自资本、人力和边际成本为零的产品（代码和媒体）。学会利用杠杆，才能实现财富的指数级增长。"
+    },
+    {
+        "book": "《纳瓦尔宝典》",
+        "knowledge": "要想获得财富，你必须拥有股权。打工只能获得线性收入，拥有股权才能获得指数级回报。要么创业，要么加入早期公司获得股权。"
+    },
+    {
+        "book": "《小狗钱钱》",
+        "knowledge": "每天写下你的梦想清单，明确你想要的生活。把大目标分解成小步骤，每天进步一点点，坚持下去就能实现财务目标。"
+    },
+    {
+        "book": "《小狗钱钱》",
+        "knowledge": "建立你的'梦想储蓄罐'，把收入的至少10%存起来用于投资。先支付自己，再支付别人，这是积累财富的第一步。"
+    },
+    {
+        "book": "《富爸爸穷爸爸》",
+        "knowledge": "资产是能把钱放进你口袋的东西，负债是把钱从你口袋取走的东西。富人买入资产，穷人买入负债，中产阶级买入自以为是资产的负债。"
+    },
+    {
+        "book": "《富爸爸穷爸爸》",
+        "knowledge": "财商教育比学历教育更重要。学校教你如何为钱工作，财商教育教你如何让钱为你工作。要不断学习投资、税务、法律和会计知识。"
+    },
+    {
+        "book": "《百万富翁快车道》",
+        "knowledge": "不要追求工作与生活的平衡，而要追求工作与生活的整合。当你热爱你的工作，工作就是生活的一部分，而不是负担。"
+    },
+    {
+        "book": "《纳瓦尔宝典》",
+        "knowledge": "学会销售，学会构建产品。如果你两者都会，你将势不可挡。技术能力让你创造价值，销售能力让你传递价值。"
+    },
+    {
+        "book": "《财富自由之路》",
+        "knowledge": "升级你的操作系统（思维方式）比升级你的应用程序（技能）更重要。改变思维方式，才能从根本上改变行为模式和结果。"
+    },
+    {
+        "book": "《有钱人和你想的不一样》",
+        "knowledge": "富人选择根据结果获得报酬，穷人选择根据时间获得报酬。要勇于承担风险，追求与成果挂钩的收入方式。"
+    }
+]
+
 # RSS订阅源配置（全球AI资讯）
 RSS_FEEDS = {
     # 国内AI媒体
@@ -341,6 +425,20 @@ def generate_contextual_insight(news_item):
     return generate_actionable_insight(news_item)
 
 
+def get_daily_wealth_knowledge():
+    """
+    获取每日财富认知小知识
+    基于日期选择，确保每天不同
+    """
+    import random
+    # 使用日期作为种子，确保每天相同
+    today = datetime.now().strftime('%Y-%m-%d')
+    random.seed(today)
+    # 随机选择一条知识
+    knowledge = random.choice(WEALTH_KNOWLEDGE)
+    return knowledge
+
+
 def format_news_html(news_list):
     """
     格式化新闻为HTML邮件（优化版：只展示15条最有价值的资讯）
@@ -354,6 +452,9 @@ def format_news_html(news_list):
     # 只保留前15条最有价值的资讯
     news_list = news_list[:15]
     
+    # 获取今日财富知识
+    wealth_knowledge = get_daily_wealth_knowledge()
+    
     html = f"""
     <html>
     <head>
@@ -364,6 +465,12 @@ def format_news_html(news_list):
             .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 8px; margin-bottom: 30px; }}
             .header h1 {{ margin: 0; font-size: 28px; }}
             .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
+            .reminder {{ background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center; font-size: 16px; font-weight: bold; border: 3px solid #ff4757; box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3); }}
+            .reminder-text {{ font-size: 18px; line-height: 1.6; }}
+            .wealth-section {{ background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 5px solid #e67e22; }}
+            .wealth-title {{ font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }}
+            .wealth-content {{ color: #2c3e50; line-height: 1.6; font-size: 14px; }}
+            .wealth-source {{ color: #7f8c8d; font-size: 12px; margin-top: 8px; font-style: italic; }}
             .news-item {{ border-left: 4px solid #667eea; padding: 20px; margin-bottom: 25px; background: #f9f9f9; border-radius: 5px; }}
             .news-item.ultra {{ border-left-color: #8e44ad; background: #f5f0ff; border-left-width: 6px; }}
             .news-item.high {{ border-left-color: #e74c3c; background: #fff5f5; }}
@@ -383,6 +490,20 @@ def format_news_html(news_list):
             <div class="header">
                 <h1>🤖 AI资讯日报</h1>
                 <p>📅 {datetime.now().strftime('%Y年%m月%d日 %A')} | 昨日8:00 - 今日8:00</p>
+            </div>
+            
+            <!-- 每日提醒 -->
+            <div class="reminder">
+                <div class="reminder-text">
+                    📢 每天安排好自己的计划了吗？背单词/课内学业/经典阅读/IP表达/LPT课程/... 不要忘记了！
+                </div>
+            </div>
+            
+            <!-- 每日财富认知 -->
+            <div class="wealth-section">
+                <div class="wealth-title">💰 每日财富认知提升</div>
+                <div class="wealth-content">{wealth_knowledge['knowledge']}</div>
+                <div class="wealth-source">—— {wealth_knowledge['book']}</div>
             </div>
             
             <div class="stats">
