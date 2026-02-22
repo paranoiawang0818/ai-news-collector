@@ -162,130 +162,113 @@ def analyze_importance(news_item):
     return score
 
 
-def translate_to_chinese(text):
-    """
-    简单的英文到中文翻译映射
-    基于常见AI术语和句式进行翻译
-    """
-    # 定义翻译映射表
-    translations = {
-        # 常见动词
-        'announces': '宣布',
-        'launches': '推出',
-        'releases': '发布',
-        'introduces': '推出',
-        'unveils': ' unveiled',
-        'debuts': '首次亮相',
-        'introducing': '推出',
-        'presents': '展示',
-        'reveals': ' revealed',
-        
-        # 常见名词
-        'new model': '新模型',
-        'new feature': '新功能',
-        'new product': '新产品',
-        'ai model': 'AI模型',
-        'language model': '语言模型',
-        'multimodal model': '多模态模型',
-        'open source': '开源',
-        'api': 'API接口',
-        'benchmark': '基准测试',
-        'performance': '性能',
-        'accuracy': '准确率',
-        'efficiency': '效率',
-        'capability': '能力',
-        'feature': '功能',
-        'update': '更新',
-        'version': '版本',
-        
-        # 常见形容词
-        'improved': '改进的',
-        'enhanced': '增强的',
-        'advanced': '先进的',
-        'powerful': '强大的',
-        'faster': '更快的',
-        'better': '更好的',
-        'larger': '更大的',
-        'smaller': '更小的',
-        
-        # 常见句式
-        'is now available': '现已可用',
-        'is now open': '现已开放',
-        'is released': '已发布',
-        'can now': '现在可以',
-        'allows users to': '允许用户',
-        'enables': '使能够',
-        'supports': '支持',
-        'includes': '包括',
-        'offers': '提供',
-        'provides': '提供',
-        
-        # 技术术语
-        'training': '训练',
-        'inference': '推理',
-        'fine-tuning': '微调',
-        'prompt': '提示词',
-        'token': '令牌',
-        'parameter': '参数',
-        'dataset': '数据集',
-        'algorithm': '算法',
-        'architecture': '架构',
-        
-        # 应用场景
-        'coding': '编程',
-        'writing': '写作',
-        'analysis': '分析',
-        'generation': '生成',
-        'translation': '翻译',
-        'summarization': '摘要',
-        'classification': '分类',
-        'prediction': '预测',
-    }
-    
-    # 转换为小写进行匹配
-    text_lower = text.lower()
-    result = text
-    
-    # 替换匹配的词组
-    for eng, chn in translations.items():
-        if eng.lower() in text_lower:
-            # 保留原始大小写匹配
-            import re
-            result = re.sub(re.escape(eng), chn, result, flags=re.IGNORECASE)
-    
-    return result
-
-
 def generate_chinese_summary(news_item):
     """
     基于文章内容生成中文概括
-    提取文章核心内容并翻译为中文
+    直接提取文章核心内容，用中文重新组织表达
     """
     title = news_item['title']
     summary = news_item['summary']
     
-    # 提取核心句子
-    import re
-    text = summary if len(summary) > 50 else title + ' ' + summary
+    # 提取核心内容（优先使用标题，因为标题通常包含关键信息）
+    text = title
     
-    # 分割句子并选择第一句
-    sentences = re.split(r'[.!?。！？]+', text)
-    first_sentence = ''
-    for sent in sentences:
-        sent = sent.strip()
-        if len(sent) > 20:
-            first_sentence = sent
+    # 如果摘要有意义，结合使用
+    if len(summary) > 30:
+        # 提取摘要的第一句
+        import re
+        sentences = re.split(r'[.!?。！？]+', summary)
+        for sent in sentences:
+            sent = sent.strip()
+            if len(sent) > 20 and len(sent) < 200:
+                text = title + ' ' + sent
+                break
+    
+    # 提取关键实体（公司、产品、技术）
+    text_lower = text.lower()
+    
+    # 识别主体
+    who = ""
+    companies = ['OpenAI', 'Google', 'Microsoft', 'Meta', 'Anthropic', 'DeepMind', 'Amazon', 'Apple', 'NVIDIA', '百度', '阿里', '腾讯', '字节跳动']
+    for company in companies:
+        if company.lower() in text_lower:
+            who = company
             break
     
-    if not first_sentence:
-        first_sentence = text[:150]
+    # 识别产品
+    if not who:
+        products = ['GPT-4', 'GPT-5', 'ChatGPT', 'Claude', 'Gemini', 'Llama', 'Copilot', 'Cursor', 'Midjourney', 'Stable Diffusion', 'Sora', 'DALL-E']
+        for product in products:
+            if product.lower() in text_lower:
+                who = product
+                break
     
-    # 翻译为中文
-    chinese_summary = translate_to_chinese(first_sentence)
+    # 识别核心动作
+    action = ""
+    if any(word in text_lower for word in ['announces', 'announced', '宣布']):
+        action = "宣布"
+    elif any(word in text_lower for word in ['launches', 'launched', '推出', '发布']):
+        action = "推出"
+    elif any(word in text_lower for word in ['releases', 'released', '发布']):
+        action = "发布"
+    elif any(word in text_lower for word in ['introduces', 'introduced', '推出']):
+        action = "推出"
+    elif any(word in text_lower for word in ['unveils', 'unveiled']):
+        action = " unveiled"
+    elif any(word in text_lower for word in ['open source', '开源', 'github']):
+        action = "开源"
+    elif any(word in text_lower for word in ['update', 'updates', '升级', '更新']):
+        action = "更新"
     
-    # 限制长度
-    if len(chinese_summary) > 120:
-        chinese_summary = chinese_summary[:120] + '...'
+    # 识别对象
+    obj = ""
+    if any(word in text_lower for word in ['new model', '新模型', 'model', '模型']):
+        obj = "新模型"
+    elif any(word in text_lower for word in ['new feature', '新功能', 'feature', '功能']):
+        obj = "新功能"
+    elif any(word in text_lower for word in ['new product', '新产品', 'product', '产品']):
+        obj = "新产品"
+    elif any(word in text_lower for word in ['api', '接口']):
+        obj = "API"
+    elif any(word in text_lower for word in ['tool', '工具']):
+        obj = "工具"
+    elif any(word in text_lower for word in ['platform', '平台']):
+        obj = "平台"
+    elif any(word in text_lower for word in ['framework', '框架']):
+        obj = "框架"
+    
+    # 识别价值/特点
+    value = ""
+    if any(word in text_lower for word in ['improved', 'better', '提升', '改进']):
+        value = "性能改进"
+    elif any(word in text_lower for word in ['faster', 'speed', '更快', '速度']):
+        value = "速度更快"
+    elif any(word in text_lower for word in ['multimodal', '多模态']):
+        value = "支持多模态"
+    elif any(word in text_lower for word in ['free', '免费', 'open source', '开源']):
+        value = "免费开放"
+    
+    # 组合成中文概括
+    parts = []
+    if who:
+        parts.append(who)
+    if action:
+        parts.append(action)
+    if obj:
+        parts.append(obj)
+    if value:
+        parts.append(f"，{value}")
+    
+    if len(parts) >= 2:
+        chinese_summary = ''.join(parts)
+    else:
+        # 如果无法提取完整信息，使用标题+摘要的方式
+        # 清理文本，移除多余空格
+        clean_text = text.replace('  ', ' ').strip()
+        # 限制长度
+        if len(clean_text) > 100:
+            clean_text = clean_text[:100] + '...'
+        chinese_summary = clean_text
     
     return chinese_summary
 
