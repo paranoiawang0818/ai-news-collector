@@ -228,52 +228,7 @@ for entry in feed.entries[:20]:  # 改为你想要的数量
 
 ---
 
-## 📝 更新日志
-
-### v1.1.0
-- ✨ 添加自定义内容
-- ✅ 调整启示内容
-- ✅ 优化概览，语言调整为中文
-- ✅ 解决了部分链接打不开的问题
-
-### v1.0.0
-- ✨ 初始版本发布
-- ✅ 支持15+全球AI资讯源
-- ✅ 智能重要性排序
-- ✅ 精美HTML邮件模板
-- ✅ GitHub Actions自动化
-
----
-
-## 🤝 贡献指南
-
-欢迎提交Issue和Pull Request！
-
-**改进建议：**
-- 🔍 添加更多优质RSS源
-- 🤖 接入LLM生成更智能的"启示"
-- 📊 增加数据可视化图表
-- 🌐 支持更多邮件服务商
-
----
-
 ## 📄 开源协议
 
 MIT License - 自由使用、修改、分发
 
----
-
-## 💬 联系方式
-
-- **GitHub Issues**：[提交问题](https://github.com/paranoiawang0818/ai-news-collector/issues)
-- **邮箱**：paranoiawang0818@qq.com
-
----
-
-## ⭐ Star History
-
-如果这个项目对你有帮助，请给个Star支持一下！
-
----
-
-**Made with ❤️ by GitHub Actions & Python**
